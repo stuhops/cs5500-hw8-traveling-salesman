@@ -14,6 +14,7 @@ using namespace std::chrono;
 
 void print(string message, vector<int> arr);
 void print(string message, int x);
+void printProgress(int gen, int lowest);
 void printBreak();
 
 vector<int> swap(vector<int> vect, int left_idx, int right_idx);
@@ -21,50 +22,51 @@ vector<int> swap(vector<int> vect, int left_idx, int right_idx);
 vector<int> fitness(const int DATA_X[], const int DATA_Y[], vector<vector<int>> vect);
 vector<vector<int>> sort_by_fitness(vector<vector<int>> vect, vector<int> fit_vect);
 
-// Crossover
-
 vector<int> mutate(vector<int> vect);
 
 int findIndex(vector<int> vect, int value);
 vector<int> crossover(vector<int> top, vector<int> bottom, int start, int end);
+vector<vector<int>> generateNewVect(vector<vector<int>> curr_vect);
+
 // Selection Policy
 // Always take the top few and then a few randomly
 
-
-// Initialize
 vector<vector<int>> initialize_vect(int SIZE);
 
 int main(int argc, char **argv) {
+
+  const int SIZE = 11;
+  const int ITERS = 1000;
+  const int DATA_X[SIZE] = { 10, 2, 3, 7, 7, 12, 23, 85, 64, 73, 162 };
+  const int DATA_Y[SIZE] = { 1, 0, 8, 4, 98, 92, 15, 17, 83, 2, 42 };
+
   srand(time(NULL));
-  const int SIZE = 4;
-  // const int DATA_X[SIZE] = { 5, 2, 4, 6, 7, 8, 1, 3 };
-  // const int DATA_Y[SIZE] = { 1, 3, 2, 7, 5, 4, 6, 8 };
-  const int DATA_X[SIZE] = { 10, 2, 3, 7 };
-  const int DATA_Y[SIZE] = { 1, 0, 8, 4 };
-  vector<vector<int>> past_vect = initialize_vect(SIZE);
-  vector<vector<int>> curr_vect = past_vect;
-  vector<int> fitness_vect = fitness(DATA_X, DATA_Y, past_vect);
+  vector<vector<int>> vect = initialize_vect(SIZE);
+  vector<int> fitness_vect = fitness(DATA_X, DATA_Y, vect);
 
-  curr_vect = sort_by_fitness(past_vect, fitness_vect);
-  past_vect = curr_vect;
-
+  print("Most Viable", fitness_vect.front());
   for(int i = 0; i < SIZE; i++) {
-    print("", curr_vect[i]);
-  }
-  cout << endl;
-  printBreak();
-
-  curr_vect[1] = crossover(curr_vect[0], curr_vect[1], 1, 3);
-  for(int i = 0; i < SIZE; i++) {
-    print("", curr_vect[i]);
+    print("", vect[i]);
   }
   cout << endl;
 
-  // Compare paths and sort viability
-  // Take top 1/8 paths
-  // Randomly take another 1/8 
-  
-  // Randomly use crossover function (n times)
+  for(int a = 0; a < ITERS; a++) {
+    vect = generateNewVect(vect);
+
+    fitness_vect = fitness(DATA_X, DATA_Y, vect);
+    vect = sort_by_fitness(vect, fitness_vect);
+
+
+    printProgress(a, fitness_vect.front());
+    // print("Most Viable", fitness_vect.front());
+    // for(int i = 0; i < SIZE; i++) {
+    //   print("", vect[i]);
+    // }
+    // cout << endl;
+
+    // printBreak();
+  }
+
   return 0;
 }
 
@@ -107,7 +109,7 @@ vector<int> fitness(const int DATA_X[], const int DATA_Y[], vector<vector<int>> 
       int dist_x = max(x1, x2) - min(x1, x2);
       int dist_y = max(y1, y2) - min(y1, y2);
 
-      distance += dist_x + dist_y;
+      distance += sqrt(dist_x * dist_x + dist_y * dist_y);
     }
     int x1 = DATA_X[vect[i].front()];
     int y1 = DATA_Y[vect[i].front()];
@@ -162,9 +164,47 @@ vector<int> crossover(vector<int> top, vector<int> bottom, int start, int end) {
   for(int i = start; i < end; i++) {
     int idx = findIndex(bottom, top[i]);
     bottom = swap(bottom, i, idx);
-    print("NewBottom", bottom);
   }
   return bottom;
+}
+
+
+vector<vector<int>> generateNewVect(vector<vector<int>> curr_vect) {
+  vector<vector<int>> new_vect;
+  vector<vector<int>> selected_vect;
+  const int SIZE = curr_vect.size();
+  
+  // Always take the best
+  selected_vect.push_back(curr_vect.front());
+
+  for(int i = 0; i < sqrt(SIZE) - 1; i++) {
+    selected_vect.push_back(curr_vect[rand() % SIZE]);
+  }
+
+  new_vect.push_back(curr_vect.front());
+
+  // Fill some with mutations
+  for(int i = 0; i < sqrt(SIZE); i++) {
+    new_vect.push_back(
+      mutate(selected_vect[rand() % selected_vect.size()], SIZE / 2)
+    );
+  }
+
+  // Fill the rest with crossovers
+  while(new_vect.size() < SIZE) {
+    int rnd1 = rand() % SIZE; 
+    int rnd2 = rand() % SIZE;
+
+    new_vect.push_back(
+      crossover(
+        selected_vect[rand() % selected_vect.size()],
+        selected_vect[rand() % selected_vect.size()], 
+        min(rnd1, rnd2), 
+        max(rnd1, rnd2)
+      )
+    );
+  }
+  return new_vect;
 }
 
 
@@ -200,3 +240,9 @@ void print(string message, int x) {
 void printBreak() {
   cout << "\n--------------------------------\n";
 }
+
+void printProgress(int gen, int lowest) {
+  cout << "Generation: " << gen << " | Most Viable: " << lowest << endl;
+}
+
+
