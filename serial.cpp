@@ -35,20 +35,17 @@ vector<vector<int>> initialize_vect(int SIZE);
 
 int main(int argc, char **argv) {
 
-  const int SIZE = 11;
+  const int SIZE = 100;
   const int ITERS = 1000;
-  const int DATA_X[SIZE] = { 10, 2, 3, 7, 7, 12, 23, 85, 64, 73, 162 };
-  const int DATA_Y[SIZE] = { 1, 0, 8, 4, 98, 92, 15, 17, 83, 2, 42 };
+  const int DATA_X[SIZE] = { 179140, 78270, 577860, 628150, 954030, 837880, 410640, 287850, 270030, 559020, 353930, 515920, 648080, 594550, 386690, 93070, 93620, 426870, 437000, 789810, 749130, 481030, 670720, 273890, 138430, 85480, 775340, 862980, 155180, 274070, 333340, 822150, 158880, 815560, 678240, 394470, 631300, 528320, 666940, 298650, 243750, 220500, 338920, 313110, 856380, 549250, 537400, 502110, 498840, 482310, 416930, 418400, 374170, 412370, 301090, 235690, 475940, 268540, 130500, 81660, 64520, 264690, 90230, 38370, 15430, 138890, 264580, 86690, 209190, 425890, 312480, 373360, 442850, 505100, 542610, 566730, 615970, 612120, 634410, 879480, 868760, 807670, 943060, 827280, 896040, 920900, 746380, 734300, 730780, 870570, 607060, 926580, 812660, 701420, 688600, 743800, 819700, 683690, 732680, 685760 }; 
+  const int DATA_Y[SIZE] = { 750703, 737081, 689926, 597095, 510314, 811285, 846947, 600161, 494359, 199445, 542989, 497472, 470280, 968799, 907669, 395385, 313966, 39662, 139949, 488001, 575522, 286118, 392925, 892877, 562658, 465869, 220065, 312238, 263662, 74689, 456245, 399803, 612518, 707417, 709341, 679221, 846813, 824193, 845130, 816352, 745443, 654221, 381007, 201386, 564703, 565255, 604425, 435463, 590729, 571034, 765126, 638700, 695851, 570904, 737412, 782470, 439645, 609753, 712663, 732470, 711936, 529248, 612484, 610277, 579032, 482432, 421188, 394738, 347661, 376154, 177450, 142350, 106198, 189757, 224170, 262940, 237922, 303181, 320152, 239867, 286928, 334613, 368070, 387076, 413699, 454842, 440559, 452247, 471211, 549620, 453077, 669624, 614479, 559132, 580646, 669521, 857004, 682649, 857362, 866857 };
+  // Creation of fstream class object 
+
 
   srand(time(NULL));
   vector<vector<int>> vect = initialize_vect(SIZE);
   vector<int> fitness_vect = fitness(DATA_X, DATA_Y, vect);
-
-  print("Most Viable", fitness_vect.front());
-  for(int i = 0; i < SIZE; i++) {
-    print("", vect[i]);
-  }
-  cout << endl;
+  int prev_fitness = fitness_vect.front();
 
   for(int a = 0; a < ITERS; a++) {
     vect = generateNewVect(vect);
@@ -56,15 +53,10 @@ int main(int argc, char **argv) {
     fitness_vect = fitness(DATA_X, DATA_Y, vect);
     vect = sort_by_fitness(vect, fitness_vect);
 
-
-    printProgress(a, fitness_vect.front());
-    // print("Most Viable", fitness_vect.front());
-    // for(int i = 0; i < SIZE; i++) {
-    //   print("", vect[i]);
-    // }
-    // cout << endl;
-
-    // printBreak();
+    if(fitness_vect.front() < prev_fitness) {
+      prev_fitness = fitness_vect.front();
+      printProgress(a, prev_fitness); 
+    } 
   }
 
   return 0;
@@ -109,7 +101,7 @@ vector<int> fitness(const int DATA_X[], const int DATA_Y[], vector<vector<int>> 
       int dist_x = max(x1, x2) - min(x1, x2);
       int dist_y = max(y1, y2) - min(y1, y2);
 
-      distance += sqrt(dist_x * dist_x + dist_y * dist_y);
+      distance += dist_x + dist_y;
     }
     int x1 = DATA_X[vect[i].front()];
     int y1 = DATA_Y[vect[i].front()];
